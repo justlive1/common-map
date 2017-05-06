@@ -16,7 +16,7 @@ public class MapWebAppInitializer implements WebApplicationInitializer {
 		servletAppContext.register(WebConfig.class);
 		ServletRegistration.Dynamic registration = container.addServlet("webjars", new DispatcherServlet(servletAppContext));
 		registration.setLoadOnStartup(2);
-		registration.addMapping("/*");
+		registration.addMapping("/");
 
 	}
 
