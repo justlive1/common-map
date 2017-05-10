@@ -8,7 +8,7 @@
 		<link rel="webjars/theme/default/style.css" />
 	</head>
 	<body>
-		<div id="map"></div>
+		<div id="map" style="width: 1000px;height:600px;"></div>
 	
 		<script type="text/javascript" src="${pageContext.request.contextPath }/webjars/syslib/jquery/jquery-3.2.0.js"></script>
 		<script type="text/javascript" src="${pageContext.request.contextPath }/webjars/syslib/OpenLayers/OpenLayers.js"></script>
@@ -19,7 +19,7 @@
 			var config = {
 					appCtx: '',
 					zoomMaxLevel: 18,
-					initLevel: 16,
+					initLevel: 8,
 					initLon: 118.7878785304,
 					initLat: 32.0498661326,
 					useMapServer: false,

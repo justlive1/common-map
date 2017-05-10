@@ -5,7 +5,7 @@
 	var defaultConfig = {
 		appCtx: '',
 		zoomMaxLevel: 18,
-		initLevel: 16,
+		initLevel: 8,
 		initLon: 118.7878785304,
 		initLat: 32.0498661326,
 		useMapServer: false,
@@ -18,6 +18,10 @@
 		layerswitcher: true
 	};
 	
+	var measureHtml = '<div id=""measureResults" class="resultLayers" style="display:none;"><strong>测量结果:</strong><span id="toolResultvalue"></span><br/>双击完成测量，<br/>再次点击测量距离或测量面积按钮释放鼠标！</div>';
+	var measureToolHtml = '<div id="measureToolLayers" class="measureToolLayers"><label class="line-polygon" data-id="line"><img /><strong>测量距离</strong></label><label class="line-polygon" data-id="polygon"><img /><strong>测量面积</strong></label></div>';
+	var mapContentHtml = '<div><div class="biddsmap"><div class="toolbar"><ul style="list-style-type: none;" class="toolbar-info" id="mapToolsBar"><li><span id="currentMapZoom"></span></li><li><span style="display:none;"><input data-id="rectangle" name="selectType" type="radio" checked="checked" />规则框选</span><span style="display:none;"><input data-id="irregular" name="selectType" type="radio" />不规则框选</span></li></ul></div><div id="_MapTools" style="height:700px;z-index:100;position: relative;"></div></div></div>';
+		
 	var MapTool = function(id, config) {
 
 		var _id = (id == null) ? 'oLMap' : id;
@@ -63,39 +67,59 @@
 		 */
 		this.init = function() {
 			
+			$("#" + _id).append(mapContentHtml);
+			
 			var vectors = new OpenLayers.Layer.Vector('line layer');
 			vectors.events.register('beforefeatureadded', vectors, function(){
 				vectors.removeAllFeatures();
 			});
 			
-			var map = new OpenLayers.Map('_MapTools', {
-				numZoomLevels: conf.zoomMaxLevel,
-				units: 'm',
-				projection: new OpenLayers.Projection("EPSG:900913"),
-				displayProjection: new OpenLayers.Projection("EPSG:4326")
-			});
+			var map;
+			var layer;
 			
+			if(conf.useMapServer){
+				//TODO
+				map = new OpenLayers.Map('_MapTools', {
+						numZoomLevels: conf.zoomMaxLevel,
+						units: 'm',
+						projection: new OpenLayers.Projection("EPSG:900913"),
+						displayProjection: new OpenLayers.Projection("EPSG:4326")
+					});
+			}else{
+				
+				map = new OpenLayers.Map('_MapTools');
+				
+				layer = new OpenLayers.Layer.WMS("OpenLayers WMS",
+						"http://vmap0.tiles.osgeo.org/wms/vmap0?", {
+						layers: 'basic'
+				});
+			}
 			map.addLayer(vectors);
+			map.addLayer(layer);
+			map.addControl(new OpenLayers.Control.MousePosition());
 			
-			_this.vecotrs = vectors;
+			if(conf.layerswitcher){
+				map.addControl(new OpenLayers.Control.LayerSwitcher());
+			}
 			
-			var wmsLayer = new OpenLayers.Layer.WMS("OpenLayers WMS",
-	                "http://vmap0.tiles.osgeo.org/wms/vmap0?", {layers: 'basic'});
-
-			map.addLayer(wmsLayer);
-			
+			_this.vectors = vectors;
+			_this.map = map;
 			_this.control = [];
 			
 			if(conf.rectangle){
 				_this.registerRectangle(conf.rectangleCallback);
-				//TODO
-				
+				$("#mapToolsBar input[data-id='rectangle']").parent().show();
+				$("#mapToolsBar input[data-id='rectangle']").on('click', function(){
+					_this.activeRectangle();
+				});
 			}
 			
 			if(conf.irRegular){
 				_this.registerIrRegular(conf.irregularCallback);
-				//TODO
-				
+				$("#mapToolsBar input[data-id='irregular']").parent().show();
+				$("#mapToolsBar input[data-id='irregular']").on('click', function(){
+					_this.activeIrRegular();
+				});
 			}
 			
 			if(conf.tools){
@@ -107,8 +131,6 @@
 			}
 			
 			_this.setMapCenter();
-
-            
 
 		};
 		
@@ -149,7 +171,7 @@
 			
 			var irregular = new OpenLayers.Control.DrawFeature(
 				vectorsIr,	
-				OpenLayers.Handler.RegularPolygon,
+				OpenLayers.Handler.Polygon,
 				{
 					handlerOptions: {
 						keyMask: OpenLayers.Handler.MOD_SHIFT
@@ -212,7 +234,9 @@
 			}
 			
 			var lonLat = new OpenLayers.LonLat(lon, lat);
-			lonLat.transform(_this.map.displayProjection, _this.map.getProjectionObject());
+			if(conf.useMapServer){
+				lonLat.transform(_this.map.displayProjection, _this.map.getProjectionObject());
+			}
 			_this.map.setCenter(lonLat, level);
 		};
 		
