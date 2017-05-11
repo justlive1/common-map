@@ -17,7 +17,7 @@
 			var mapTool;
 			
 			var config = {
-					appCtx: '',
+					appCtx: '${pageContext.request.contextPath }',
 					zoomMaxLevel: 18,
 					initLevel: 8,
 					initLon: 118.7878785304,
@@ -26,8 +26,12 @@
 					tools: true,
 					rectangle: true,
 					irRegular: true,
-					rectangleCallback: null,
-					irregularCallback: null,
+					rectangleCallback: function(f){
+						console.log(f);
+					},
+					irregularCallback: function(f){
+						console.log(f);
+					},
 					layerswitcher: true
 			};
 			
