@@ -1,3 +1,7 @@
+
+.measureToolLayers, .resultLayers{
+	background-color: rgba(257,257,257,0.5);
+}
 div.olMap {
     z-index: 0;
     padding: 0 !important;

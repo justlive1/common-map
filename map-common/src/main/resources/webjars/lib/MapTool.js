@@ -18,7 +18,7 @@
 		layerswitcher: true
 	};
 	
-	var measureHtml = '<div id=""measureResults" class="resultLayers" style="display:none;"><strong>测量结果:</strong><span id="toolResultvalue"></span><br/>双击完成测量，<br/>再次点击测量距离或测量面积按钮释放鼠标！</div>';
+	var measureHtml = '<div id="measureResults" class="resultLayers" style="display:none;"><strong>测量结果:</strong><span id="toolResultvalue"></span><br/>双击完成测量，<br/>再次点击测量距离或测量面积按钮释放鼠标！</div>';
 	var measureToolHtml = '<div id="measureToolLayers" class="measureToolLayers"><label class="line-polygon" data-id="line"><img /><strong>测量距离</strong></label><label class="line-polygon" data-id="polygon"><img /><strong>测量面积</strong></label></div>';
 	var mapContentHtml = '<div><div class="biddsmap"><div class="toolbar"><ul style="list-style-type: none;" class="toolbar-info" id="mapToolsBar"><li><span id="currentMapZoom"></span></li><li><span style="display:none;"><input data-id="rectangle" name="selectType" type="radio" checked="checked" />规则框选</span><span style="display:none;"><input data-id="irregular" name="selectType" type="radio" />不规则框选</span></li></ul></div><div id="_MapTools" style="height:700px;z-index:100;position: relative;"></div></div></div>';
 		
@@ -60,6 +60,14 @@
 			destoryMarkers(map, name);
 			var marker = new OpenLayers.Layer.Markers(name);
 			map.addLayer(marker);
+		}
+		
+		function handleMeasurements(event){
+			var out = " " + event.measure.toFixed(3) + " " + event.units;
+			if(event.order != 1){
+				out += "<sup>2</sup>";
+			}
+			$("#toolResultvalue").html(out);
 		}
 		
 		/**
@@ -195,6 +203,151 @@
 		 * 注册地图工具
 		 */
 		this.registerTools = function() {
+			
+			OpenLayers.INCHES_PER_UNIT['千米'] = OpenLayers.INCHES_PER_UNIT['km'];
+			OpenLayers.INCHES_PER_UNIT['米'] = OpenLayers.INCHES_PER_UNIT['m'];
+			OpenLayers.INCHES_PER_UNIT['英里'] = OpenLayers.INCHES_PER_UNIT['mi'];
+			OpenLayers.INCHES_PER_UNIT['英尺'] = OpenLayers.INCHES_PER_UNIT['ft'];
+			
+			var measureToolPanel = new OpenLayers.Control.Panel({
+				createControlMarkup: function(){
+					return $(measureToolHtml.replace(/{appCtx}/g, conf.appCtx))[0];
+				}
+			});
+			
+			measureToolPanel.addControls(new OpenLayers.Control.Button());
+			_this.map.addControl(measureToolPanel);
+			
+			var toolLayersStyle = $("#measureToolLayers").parent().attr('style');
+			$("#measureToolLayers").parent().attr('style', toolLayersStyle + ";right:10px;top:10px;");
+
+			var measurePanel = new OpenLayers.Control.Panel({
+				createControlMarkup: function() {
+					return $(measureHtml)[0];
+				}
+			});
+			
+			measurePanel.addControls(new OpenLayers.Control.Button());
+			_this.map.addControl(measurePanel);
+			
+			var resultStyle = $("#measureResults").parent().attr('style');
+			$("#measureResults").parent().attr('style', resultStyle + ";left:55px;top:10px;");
+
+			
+			var sketchSymbolizers = {
+				"Point": {
+					pointRadius: 4,
+					graphicName: "square",
+					fillColor: "white",
+					fillOpacity: 1,
+					strokeWidth: 1,
+					strokeOpacity: 1,
+					strokeColor: "#333333"
+				},
+				"Line": {
+					strokeWidth: 2,
+					strokeOpacity: 1,
+					strokeColor: "#666666"
+				},
+				"Polygon": {
+					strokeWidth: 2,
+					strokeOpacity: 1,
+					strokeColor: "#666666",
+					fillColor: "white",
+					fillOpacity: 0.5
+				}
+			};
+			
+			var style = new OpenLayers.Style();
+			style.addRules([new OpenLayers.Rule({
+				symbolizer: sketchSymbolizers
+			})]);
+			
+			var styleMap = new OpenLayers.StyleMap({
+				"default": style
+			});
+			
+			var renderer = OpenLayers.Util.getParameters(window.location.href).renderer;
+			renderer = (renderer) ? [renderer] : OpenLayers.Layer.Vector.prototype.renderers;
+			
+			var myMeasureTools = {};
+			myMeasureTools.line = new OpenLayers.Control.Measure(
+				OpenLayers.Handler.Path,
+				{
+					persist: true,
+					handlerOptions: {
+						layerOptions: {
+							renderers: renderer,
+							styleMap: styleMap
+						}
+					}
+				}
+			);
+			
+			myMeasureTools.polygon = new OpenLayers.Control.Measure(
+					OpenLayers.Handler.Polygon,
+					{
+						persist: true,
+						handlerOptions: {
+							layerOptions: {
+								renderers: renderer,
+								styleMap: styleMap
+							}
+						}
+					}
+				);
+			
+			myMeasureTools.line.events.on({
+				"measure": handleMeasurements,
+				"measurepartial": handleMeasurements
+			});
+			
+			myMeasureTools.polygon.events.on({
+				"measure": handleMeasurements,
+				"measurepartial": handleMeasurements
+			});
+			
+			_this.map.addControls([myMeasureTools.line, myMeasureTools.polygon]);
+			
+			var scaleLine = new OpenLayers.Control.ScaleLine({
+				topOutUnits: "千米",
+				topInUnits: "米",
+				bottomOutUnits: "英里",
+				bottomInUnits: "英尺"
+			});
+			
+			_this.map.addControl(scaleLine);
+			_this.myMeasureTools = myMeasureTools;
+			
+			$(".line-polygon").on('click', function(){
+				
+				var id = $(this).data('id');
+				if(id == 'line'){
+					$('.line-polygon[data-id="polygon"]').css("background","rgba(0,0,0,0)");
+				}else{
+					$('.line-polygon[data-id="line"]').css("background","rgba(0,0,0,0)");
+				}
+				
+				for(var key in _this.myMeasureTools){
+					var control = _this.myMeasureTools[key];
+					if(id == key){
+						control.activate();
+					}else{
+						control.deactivate();
+					}
+				}
+				
+				if($(this).css("background-color") == 'rgb(159, 208, 233)') {
+					$("#measureResults").hide();
+					$(this).css("background-color", "rgba(0,0,0,0)");
+					_this.myMeasureTools[id].deactivate();
+				}else{
+					$("#toolResultvalue").html('');
+					$("#measureResults").show();
+					$(this).css("background-color", "rgb(159, 208, 233)");
+				}
+				
+			});
 			
 		};
 		
