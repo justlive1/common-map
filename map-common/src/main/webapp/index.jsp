@@ -5,14 +5,14 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<title>Example</title>
 		
-		<link rel="webjars/theme/default/style.css" />
+		<link rel="${pageContext.request.contextPath }/webjars/theme/default/style.css" />
 	</head>
 	<body>
 		<div id="map" style="width: 1000px;height:600px;"></div>
 	
 		<script type="text/javascript" src="${pageContext.request.contextPath }/webjars/syslib/jquery/jquery-3.2.0.js"></script>
 		<script type="text/javascript" src="${pageContext.request.contextPath }/webjars/syslib/OpenLayers/OpenLayers.js"></script>
-		<script type="text/javascript" src="webjars/lib/MapTool.js"></script>
+		<script type="text/javascript" src="${pageContext.request.contextPath }/webjars/lib/MapTool.js"></script>
 		<script type="text/javascript">
 			var mapTool;
 			
