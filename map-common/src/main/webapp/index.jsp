@@ -17,22 +17,22 @@
 			var mapTool;
 			
 			var config = {
-					appCtx: '${pageContext.request.contextPath }',
-					zoomMaxLevel: 18,
-					initLevel: 8,
-					initLon: 118.7878785304,
-					initLat: 32.0498661326,
-					useMapServer: false,
-					tools: true,
-					rectangle: true,
-					irRegular: true,
-					rectangleCallback: function(f){
+					appCtx: '${pageContext.request.contextPath }',	//应用根目录
+					zoomMaxLevel: 18,								//地图最大级别
+					initLevel: 8,									//地图初始级别
+					initLon: 118.7878785304,						//初始经度
+					initLat: 32.0498661326,							//初始纬度
+					useMapServer: false,							//是否启用自己的地图服务
+					tools: true,									//开启地图工具功能
+					rectangle: true,								//开启规则框选功能
+					irRegular: true,								//开启不规则框选功能
+					rectangleCallback: function(f){					//规则框选回调
 						console.log(f);
 					},
-					irregularCallback: function(f){
+					irregularCallback: function(f){					//不规则框选回调
 						console.log(f);
 					},
-					layerswitcher: true
+					layerswitcher: true								//开启图层展示
 			};
 			
 			mapTools = new MapTool('map', config);
