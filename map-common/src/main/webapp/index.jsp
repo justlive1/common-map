@@ -17,27 +17,39 @@
 			var mapTool;
 			
 			var config = {
-					appCtx: '${pageContext.request.contextPath }',	//应用根目录
-					zoomMaxLevel: 18,								//地图最大级别
-					initLevel: 8,									//地图初始级别
-					initLon: 118.7878785304,						//初始经度
-					initLat: 32.0498661326,							//初始纬度
-					useMapServer: false,							//是否启用自己的地图服务
-					tools: true,									//开启地图工具功能
-					rectangle: true,								//开启规则框选功能
-					irRegular: true,								//开启不规则框选功能
-					rectangleCallback: function(f){					//规则框选回调
-						console.log(f);
-					},
-					irregularCallback: function(f){					//不规则框选回调
-						console.log(f);
-					},
-					layerswitcher: true								//开启图层展示
+				//应用根目录
+				appCtx : '${pageContext.request.contextPath }',
+				//地图最大级别
+				zoomMaxLevel : 18,
+				//地图初始级别
+				initLevel : 8,
+				//初始经度
+				initLon : 118.7878785304,
+				//初始纬度
+				initLat : 32.0498661326,
+				//是否启用自己的地图服务
+				useMapServer : false,
+				//开启地图工具功能
+				tools : true,
+				//开启规则框选功能
+				rectangle : true,
+				//开启不规则框选功能
+				irRegular : true,
+				//规则框选回调
+				rectangleCallback : function(f) {
+					console.log(f);
+				},
+				//不规则框选回调
+				irregularCallback : function(f) {
+					console.log(f);
+				},
+				//开启图层展示
+				layerswitcher : true
+
 			};
-			
+
 			mapTools = new MapTool('map', config);
 			mapTools.init();
-			
 		</script>
 	</body>
 </html>
