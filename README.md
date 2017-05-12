@@ -1,5 +1,5 @@
 # map-common
-提供地图公共服务
+提供OpenLayers地图基本功能
 
 
 ### 依赖当前jar
