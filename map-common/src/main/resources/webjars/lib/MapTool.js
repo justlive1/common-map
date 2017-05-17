@@ -44,7 +44,7 @@
 				var ctl = _this.control[k];
 				if(ctl[0] == type){
 					ctl[1].activate();
-					//TODO 
+					$("#mapToolsBar input[data-id='" + type + "']").props("checked",true);
 				}else{
 					ctl[1].deactivate();
 				}
