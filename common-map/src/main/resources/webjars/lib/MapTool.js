@@ -10,9 +10,11 @@
 		initLat: 32.0498661326,
 		useMapServer: false,
 		mapServerUrl: '',
+		showCurrentZoom: true,
 		tools: true,
 		rectangle: true,
 		irRegular: true,
+		fullMapSearch: true,
 		rectangleCallback: null,
 		irregularCallback: null,
 		layerswitcher: true
@@ -20,7 +22,7 @@
 	
 	var measureHtml = '<div id="measureResults" class="resultLayers" style="display:none;"><strong>测量结果:</strong><span id="toolResultvalue"></span><br/>双击完成测量，<br/>再次点击测量距离或测量面积按钮释放鼠标！</div>';
 	var measureToolHtml = '<div id="measureToolLayers" class="measureToolLayers"><label class="line-polygon" data-id="line"><img /><strong>测量距离</strong></label><label class="line-polygon" data-id="polygon"><img /><strong>测量面积</strong></label></div>';
-	var mapContentHtml = '<div><div class="biddsmap"><div class="toolbar"><ul style="list-style-type: none;" class="toolbar-info" id="mapToolsBar"><li><span id="currentMapZoom"></span></li><li><span style="display:none;"><input data-id="rectangle" name="selectType" type="radio" checked="checked" />规则框选</span><span style="display:none;"><input data-id="irregular" name="selectType" type="radio" />不规则框选</span></li></ul></div><div id="_MapTools" style="height:700px;z-index:100;position: relative;"></div></div></div>';
+	var mapContentHtml = '<div><div class="biddsmap"><div class="toolbar"><ul style="list-style-type: none;" class="toolbar-info" id="mapToolsBar"><li><span id="fullMapSearchBar"><input type="text" id="fullMapSearchText" placeholder="搜地点" /><input class="btn map-search" type="button" value="搜索" /></span></li><li><span style="display:none;" id="currentMapZoom"></span><span style="display:none;"><input data-id="rectangle" name="selectType" type="radio" checked="checked" />规则框选</span><span style="display:none;"><input data-id="irregular" name="selectType" type="radio" />不规则框选</span></li></ul></div><div id="_MapTools" style="height:700px;z-index:100;position: relative;"></div></div></div>';
 		
 	var MapTool = function(id, config) {
 
@@ -44,7 +46,7 @@
 				var ctl = _this.control[k];
 				if(ctl[0] == type){
 					ctl[1].activate();
-					$("#mapToolsBar input[data-id='" + type + "']").props("checked",true);
+					$("#mapToolsBar input[data-id='" + type + "']").prop("checked",true);
 				}else{
 					ctl[1].deactivate();
 				}
@@ -114,6 +116,10 @@
 			_this.map = map;
 			_this.control = [];
 			
+			if(conf.showCurrentZoom){
+				_this.registerZoomEvent();
+			}
+			
 			if(conf.rectangle){
 				_this.registerRectangle(conf.rectangleCallback);
 				$("#mapToolsBar input[data-id='rectangle']").parent().show();
@@ -134,12 +140,79 @@
 				_this.registerTools();
 			}
 			
+			if(conf.fullMapSearch){
+				_this.registerFullMapSearch();
+			}
+			
 			if(_this.control.length > 0){
 				_this.control[0][1].activate();
 			}
 			
 			_this.setMapCenter();
 
+		};
+		
+		/**
+		 * 注册滚轮事件
+		 */
+		this.registerZoomEvent = function(callback){
+			$("#currentMapZoom").show();
+			 _this.map.events.register("zoomend", this, function (e) {
+			       var zoom = _this.map.getZoom();
+			       $("#currentMapZoom").text(zoom);
+			 });
+		};
+		
+		/**
+		 * 增加地图全文搜索
+		 */
+		this.registerFullMapSearch = function(callback){
+			
+			$("#fullMapSearchBar").show();
+			
+			$("#fullMapSearchBar input[type='button']").on('click', function(){
+				
+				var keyword = $("#fullMapSearchText").val();
+				if(keyword == null || keyword == ''){
+					alert('请输入查询关键字！');
+					return;
+				}
+				
+				$.ajax({
+					url: conf.appCtx + "/mapFull/search",
+					type: 'post',
+					data: {
+						keyword : keyword
+					},
+					success: function(data){
+						console.log(data)
+						if(data.code == '0'){
+							if(data.content != null && data.content.length > 0){
+								_this.clearMarker('markers');
+								
+								$.each(data.content,function(index, item){
+									
+									item.lon = item.diPointX;
+									item.lat = item.diPointY;
+									//FIXME 
+									_this.addMarker(item);
+								});
+								
+							}else{
+								alert('未查询到数据');
+							}
+						}else{
+							alert(data.msg || '查询失败！')
+						}
+					},
+					error: function(e){
+						alert("查询失败！");
+					}
+				});
+				
+				
+			});
+			
 		};
 		
 		/**
@@ -451,6 +524,46 @@
 		 */
 		this.transform = function(point) {
 			return point.clone().transform(_this.map.getProjectionObject(), _this.map.displayProjection);
+		};
+		
+		/**
+		 * 添加标记<br>
+		 * @param item 必须包含 lon:经度，lat:纬度 属性
+		 * @param msg 点击标记弹出框的显示文字，或者是对item处理并返回string的funtion
+		 * 
+		 */
+		this.addMarker = function(item, msg) {
+
+			var markers = _this.map.getLayersByName('markers');
+            if(markers.length == 0){
+            	markers = new OpenLayers.Layer.Markers("markers");
+            	_this.map.addLayer(markers);
+            }else{
+            	markers = markers[0];
+            }
+
+            var size = new OpenLayers.Size(21,25);
+            var offset = new OpenLayers.Pixel(-(size.w/2), -size.h);
+            var icon = new OpenLayers.Icon(conf.appCtx + '/webjars/syslib/img/marker.png',size,offset);
+            var lonlat = new OpenLayers.LonLat(item.lon,item.lat);
+            lonlat = _this.transform(lonlat);
+            var marker = new OpenLayers.Marker(lonlat,icon)
+            
+            if(msg != null){
+            	
+            	var line = msg;
+            	
+            	if(typeof msg === 'function'){
+            		line = msg(item);
+            	}
+            	
+            	marker.events.register('click', marker, function(evt){
+            		_this.map.addPopup(new OpenLayers.Popup.FramedCloud("popup", lonlat, null, line, null, true));
+            	});
+            }
+            
+            markers.addMarker(marker);
+
 		};
 		
 	};
