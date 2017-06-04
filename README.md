@@ -1,4 +1,4 @@
-# map-common
+# common-map
 提供OpenLayers地图基本功能
 
 
