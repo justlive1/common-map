@@ -192,10 +192,10 @@
 								
 								$.each(data.content,function(index, item){
 									
-									item.lon = item.diPointX;
-									item.lat = item.diPointY;
-									//FIXME 
-									_this.addMarker(item);
+									var lonlat = new OpenLayers.LonLat(item.diPointX/100, item.diPointY/100);
+									lonlat.transform(new OpenLayers.Projection("EPSG:900913"),new OpenLayers.Projection("EPSG:4326"));
+									
+									_this.addMarker(lonlat, item.addr);
 								});
 								
 							}else{
@@ -558,7 +558,9 @@
             	}
             	
             	marker.events.register('click', marker, function(evt){
-            		_this.map.addPopup(new OpenLayers.Popup.FramedCloud("popup", lonlat, null, line, null, true));
+            		var popup = new OpenLayers.Popup.FramedCloud("popup", lonlat, null, line, null, true);
+            		popup.closeOnMove = true;
+            		_this.map.addPopup(popup);
             	});
             }
             
