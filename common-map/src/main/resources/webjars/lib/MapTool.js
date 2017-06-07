@@ -560,7 +560,7 @@
             	marker.events.register('click', marker, function(evt){
             		var popup = new OpenLayers.Popup.FramedCloud("popup", lonlat, null, line, null, true);
             		popup.closeOnMove = true;
-            		_this.map.addPopup(popup);
+            		_this.map.addPopup(popup, true);
             	});
             }
             
