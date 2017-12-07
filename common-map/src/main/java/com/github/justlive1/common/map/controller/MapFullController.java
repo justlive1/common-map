@@ -2,6 +2,7 @@ package com.github.justlive1.common.map.controller;
 
 import java.util.List;
 
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -38,6 +39,8 @@ public class MapFullController {
 			return Response.success(list);
 
 		} catch (Exception e) {
+
+			LogFactory.getLog(getClass()).error("", e);
 
 			return Response.fail("-2", "查询失败！");
 		}

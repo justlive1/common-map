@@ -123,7 +123,7 @@
 			if(conf.rectangle){
 				_this.registerRectangle(conf.rectangleCallback);
 				$("#mapToolsBar input[data-id='rectangle']").parent().show();
-				$("#mapToolsBar input[data-id='rectangle']").on('click', function(){
+				$("#" + _id).on('click', "#mapToolsBar input[data-id='rectangle']", function(){
 					_this.activeRectangle();
 				});
 			}
@@ -131,7 +131,7 @@
 			if(conf.irRegular){
 				_this.registerIrRegular(conf.irregularCallback);
 				$("#mapToolsBar input[data-id='irregular']").parent().show();
-				$("#mapToolsBar input[data-id='irregular']").on('click', function(){
+				$("#" + _id).on('click', "#mapToolsBar input[data-id='irregular']", function(){
 					_this.activeIrRegular();
 				});
 			}
@@ -170,7 +170,7 @@
 			
 			$("#fullMapSearchBar").show();
 			
-			$("#fullMapSearchBar input[type='button']").on('click', function(){
+			$("#" + _id).on('click', "#fullMapSearchBar input[type='button']", function(){
 				
 				var keyword = $("#fullMapSearchText").val();
 				if(keyword == null || keyword == ''){
@@ -392,7 +392,7 @@
 			_this.map.addControl(scaleLine);
 			_this.myMeasureTools = myMeasureTools;
 			
-			$(".line-polygon").on('click', function(){
+			$("#" + _id).on('click', ".line-polygon", function(){
 				
 				var id = $(this).data('id');
 				if(id == 'line'){
